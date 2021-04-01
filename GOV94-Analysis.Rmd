@@ -33,6 +33,203 @@ col_types = cols(
 ```
 
 ```{r}
-
+data1 <- read_delim("black-lives-matter-2020.txt", delim = ",", col_types = col_types)
+data2 <- read_delim("black-lives-matter-george-floyd-june.txt", delim = ",", col_types = col_types)
+data3 <- read_delim("black-lives-matter-george-floyd.txt", delim = ",", col_types = col_types)
+data4 <- read_delim("black-lives-matter.txt", delim = ",", col_types = col_types)
 ```
+
+```{r}
+data1 <- unique(data1)
+data2 <- unique(data2)
+data3 <- unique(data3)
+data4 <- unique(data4)
+```
+
+```{r}
+data12 <- bind_rows(data1, data2)
+
+data123 <- bind_rows(data12, data3)
+
+all_data <- bind_rows(data123, data4)
+
+data <- unique(all_data)
+
+data <- data %>%
+  filter(date != "Skipped")
+
+# urlnum <- unique(data$URL) # u: 745; data: 854; all: 1003
+```
+
+```{r}
+data <- data %>%
+  mutate(date = dmy(date))
+```
+
+```{r}
+Encoding(data$content) <- "latin1"
+
+data$content <- replace_non_ascii(data$content)
+```
+
+```{r}
+corpus <- SimpleCorpus(VectorSource(data$content))
+# view(corpus)
+```
+
+```{r}
+corpus <- tm_map(corpus, stripWhitespace)
+
+corpus <- tm_map(corpus, content_transformer(tolower))
+
+corpus <- tm_map(corpus, removeNumbers)
+
+corpus <- tm_map(corpus, removePunctuation)
+
+corpus <- tm_map(corpus, removeWords, stopwords("english"))
+```
+
+```{r}
+nonstem.corpus <- corpus
+corpus <- tm_map(corpus, stemDocument)
+```
+
+```{r}
+DTM <- DocumentTermMatrix(corpus)
+```
+
+```{r}
+nDTM <- DocumentTermMatrix(nonstem.corpus)
+```
+
+```{r}
+sums <- as.data.frame(colSums(as.matrix(nDTM)))
+sums <- rownames_to_column(sums)
+colnames(sums) <- c("term", "count")
+sums <- arrange(sums, desc(count))
+head <- sums[1:75,]
+
+sums2 <- as.data.frame(as.matrix(nDTM))
+sums2d <- as.data.frame(as.matrix(DTM))
+```
+
+```{r}
+sums2$ArtDate <- data$date
+sums2d$ArtDate <- data$date
+
+sums2$URL <- data$URL
+sums2 <- unique(sums2)
+
+sums2d$URL <- data$URL
+sums2d <- unique(sums2d)
+```
+
+```{r}
+# redundancy eliminator
+
+# non-stemmed
+choice2 <- sums2 %>% select(c(ArtDate, blacklivesmatter, URL))
+choice2 <- unique(choice2)
+#view(choice2)
+
+# stemmed
+# choice2d <- sums2d %>% select(c(ArtDate, western, URL))
+# choice2d <- unique(choice2d)
+# view(choice2d)
+```
+
+```{r}
+# Choose choice2 or choice2d (stemmed)
+
+choice2 %>%
+  group_by(ArtDate) %>% 
+  summarise(Frequency = sum(navalny)) %>%
+  ggplot(aes(x = ArtDate, y = Frequency)) +
+  geom_point() +
+  # geom_smooth(method = 'loess') +
+  labs(
+    title = "Term Frequency Per Article Over Time",
+    subtitle = "Term: 'navalny', RT Search Term: N/A, 'Clinton' Terms",
+    x = "Date",
+    y = "Frequency"
+    # Comment/uncomment caption below as needed. Add/delete comma in line above, too.
+    # caption = "Stemmed."
+  ) +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggsave("all-blm/navalny.png", width = 10)
+```
+
+```{r}
+wordcloud(words = head$term, freq = head$count, min.freq = 250,
+  max.words=100, random.order=FALSE, rot.per=0.35, 
+  colors=brewer.pal(8, "Dark2"))
+```
+
+```{r}
+sent <- analyzeSentiment(DTM, language = "english")
+# view(sent)
+
+sent <- sent[,1:4]
+
+sent <- as.data.frame(sent)
+
+# view(sent)
+
+sum1 <- tibble(summary(sent$SentimentGI))
+
+final <- bind_cols(data, sent)
+
+# head(final)
+```
+
+```{r}
+sum2 <- as.data.frame(t(sum1))
+
+# CHANGE BELOW 'RT Seach Term' to whatever search term your data is based on.
+sum2 %>%
+  gt() %>%
+  tab_header(
+    title = "Sentiment Polarization Summary",
+    subtitle = "RT Search Term: N/A, 'Clinton' Terms"
+    )  %>% 
+  # #tab_source_note(
+  #   source_note = "RT Search Term was entered with quotation marks for accuracy."
+  #   ) %>% 
+  cols_label(
+    V1 = "Min.",
+    V2 = "1st Qu.",
+    V3 = "Median",
+    V4 = "Mean",
+    V5 = "3rd Qu.",
+    V6 = "Max."
+    ) %>% 
+  gtsave("all-blm/table1.png", zoom = 2.5, expand = 10)
+```
+
+```{r}
+sent2 <- get_nrc_sentiment(data$content, language = "english")
+
+sent3 <- as.data.frame(colSums(sent2))
+
+sent3 <- rownames_to_column(sent3)
+
+colnames(sent3) <- c("emotion", "count")
+```
+
+```{r}
+ggplot(sent3, aes(x = emotion, y = count, fill = emotion)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  theme(legend.position="none", panel.grid.major = element_blank()) +
+  labs(title = "Emotion Analysis",
+       x = "Emotion",
+       y = "Total Count",
+       subtitle = "RT Search Term: N/A, 'Clinton' Terms"
+       # caption = "RT Search Term was entered with quotation marks for accuracy."
+       ) +
+  scale_fill_brewer(palette="Paired") +
+  ggsave("all-blm/emo1.png", width = 10)
+```
+
 
