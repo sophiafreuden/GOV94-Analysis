@@ -58,7 +58,7 @@ data <- unique(all_data)
 data <- data %>%
   filter(date != "Skipped")
 
-# urlnum <- unique(data$URL) # u: 745; data: 854; all: 1003
+urlnum <- unique(data$URL) # u: 701; data: 790; all: 1003
 ```
 
 ```{r}
@@ -108,6 +108,9 @@ sums <- rownames_to_column(sums)
 colnames(sums) <- c("term", "count")
 sums <- arrange(sums, desc(count))
 head <- sums[1:75,]
+view(head)
+head <- head %>%
+  filter(count <= 7000)
 
 sums2 <- as.data.frame(as.matrix(nDTM))
 sums2d <- as.data.frame(as.matrix(DTM))
@@ -128,13 +131,13 @@ sums2d <- unique(sums2d)
 # redundancy eliminator
 
 # non-stemmed
-choice2 <- sums2 %>% select(c(ArtDate, blacklivesmatter, URL))
+choice2 <- sums2 %>% select(c(ArtDate, republicanparty, URL))
 choice2 <- unique(choice2)
 #view(choice2)
 
 # stemmed
-# choice2d <- sums2d %>% select(c(ArtDate, western, URL))
-# choice2d <- unique(choice2d)
+choice2d <- sums2d %>% select(c(ArtDate, elect, URL))
+choice2d <- unique(choice2d)
 # view(choice2d)
 ```
 
@@ -143,26 +146,28 @@ choice2 <- unique(choice2)
 
 choice2 %>%
   group_by(ArtDate) %>% 
-  summarise(Frequency = sum(navalny)) %>%
+  summarise(Frequency = sum(republicanparty)) %>%
   ggplot(aes(x = ArtDate, y = Frequency)) +
   geom_point() +
   # geom_smooth(method = 'loess') +
   labs(
     title = "Term Frequency Per Article Over Time",
-    subtitle = "Term: 'navalny', RT Search Term: N/A, 'Clinton' Terms",
+    subtitle = "Term: 'republicanparty'",
     x = "Date",
     y = "Frequency"
     # Comment/uncomment caption below as needed. Add/delete comma in line above, too.
-    # caption = "Stemmed."
+   # caption = "Stemmed."
   ) +
-  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b %Y") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ggsave("all-blm/navalny.png", width = 10)
+  ggsave("all-blm/republicanparty.png", width = 10)
 ```
 
 ```{r}
-wordcloud(words = head$term, freq = head$count, min.freq = 250,
-  max.words=100, random.order=FALSE, rot.per=0.35, 
+# head <- head[-1,]
+
+wordcloud(words = head$term, freq = head$count, min.freq = 250, scale=c(3,.75),
+  max.words=75, random.order=FALSE, rot.per=0.35, 
   colors=brewer.pal(8, "Dark2"))
 ```
 
@@ -190,8 +195,7 @@ sum2 <- as.data.frame(t(sum1))
 sum2 %>%
   gt() %>%
   tab_header(
-    title = "Sentiment Polarization Summary",
-    subtitle = "RT Search Term: N/A, 'Clinton' Terms"
+    title = "Sentiment Polarization Summary"
     )  %>% 
   # #tab_source_note(
   #   source_note = "RT Search Term was entered with quotation marks for accuracy."
@@ -224,8 +228,7 @@ ggplot(sent3, aes(x = emotion, y = count, fill = emotion)) +
   theme(legend.position="none", panel.grid.major = element_blank()) +
   labs(title = "Emotion Analysis",
        x = "Emotion",
-       y = "Total Count",
-       subtitle = "RT Search Term: N/A, 'Clinton' Terms"
+       y = "Total Count"
        # caption = "RT Search Term was entered with quotation marks for accuracy."
        ) +
   scale_fill_brewer(palette="Paired") +
