@@ -125,6 +125,8 @@ sums2 <- unique(sums2)
 
 sums2d$URL <- data$URL
 sums2d <- unique(sums2d)
+
+# Col sums mean: 7.764922, median: 1
 ```
 
 ```{r}
@@ -233,6 +235,35 @@ ggplot(sent3, aes(x = emotion, y = count, fill = emotion)) +
        ) +
   scale_fill_brewer(palette="Paired") +
   ggsave("all-blm/emo1.png", width = 10)
+```
+
+```{r}
+# col sums stats
+
+statsdata <- sums2 %>%
+  select(-c(ArtDate, URL))
+
+tib <- as.data.frame(t(tibble(summary(colSums(statsdata)))))
+```
+
+```{r}
+tib %>%
+  gt() %>%
+  tab_header(
+    title = "Columns Sum Summary"
+    )  %>% 
+  # #tab_source_note(
+  #   source_note = "RT Search Term was entered with quotation marks for accuracy."
+  #   ) %>% 
+  cols_label(
+    V1 = "Min.",
+    V2 = "1st Qu.",
+    V3 = "Median",
+    V4 = "Mean",
+    V5 = "3rd Qu.",
+    V6 = "Max."
+    ) %>% 
+  gtsave("all-blm/table2.png", zoom = 2.5, expand = 10)
 ```
 
 
