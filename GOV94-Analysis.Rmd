@@ -166,6 +166,32 @@ choice2 %>%
 ```
 
 ```{r}
+# story extractor
+
+temp <- sums2 %>% select(c(ArtDate, blacklivesmatter, URL))
+temp <- unique(temp)
+# temp2 <- sums2d %>% select(c(ArtDate, ukrain, URL))
+# temp2 <- unique(temp2)
+view(temp)
+
+head1 <- temp %>% arrange(desc(blacklivesmatter))
+head1 <- head(head1, 10)
+view(head1)
+
+print(head1$URL[1])
+print(head1$URL[2])
+print(head1$URL[3])
+print(head1$URL[4])
+print(head1$URL[5])
+print(head1$URL[6])
+print(head1$URL[7])
+print(head1$URL[8])
+print(head1$URL[9])
+print(head1$URL[10])
+```
+
+
+```{r}
 # head <- head[-1,]
 
 wordcloud(words = head$term, freq = head$count, min.freq = 250, scale=c(3,.75),
@@ -265,5 +291,4 @@ tib %>%
     ) %>% 
   gtsave("all-blm/table2.png", zoom = 2.5, expand = 10)
 ```
-
 
