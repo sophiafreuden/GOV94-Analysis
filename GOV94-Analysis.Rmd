@@ -138,7 +138,7 @@ choice2 <- unique(choice2)
 #view(choice2)
 
 # stemmed
-choice2d <- sums2d %>% select(c(ArtDate, segreg, URL))
+choice2d <- sums2d %>% select(c(ArtDate, woke, URL))
 choice2d <- unique(choice2d)
 # view(choice2d)
 ```
@@ -148,13 +148,13 @@ choice2d <- unique(choice2d)
 
 choice2d %>%
   group_by(ArtDate) %>% 
-  summarise(Frequency = sum(segreg)) %>%
+  summarise(Frequency = sum(woke)) %>%
   ggplot(aes(x = ArtDate, y = Frequency)) +
   geom_point() +
   geom_smooth(method = 'loess') +
   labs(
     title = "Term Frequency Per Article Over Time",
-    subtitle = "Term: 'segreg'",
+    subtitle = "Term: 'woke'",
     x = "Date",
     y = "Frequency",
     # Comment/uncomment caption below as needed. Add/delete comma in line above, too.
@@ -162,7 +162,7 @@ choice2d %>%
   ) +
   scale_x_date(date_breaks = "1 month", date_labels = "%b %Y") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ggsave("all-blm/segreg.png", width = 10)
+  ggsave("all-blm/woke.png", width = 10)
 ```
 
 ```{r}
